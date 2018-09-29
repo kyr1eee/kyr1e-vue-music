@@ -29,7 +29,6 @@ export default {
     ])
   },
   created() {
-    // console.log('state: ', this.$store.state)
     this._getSingerDetail()
   },
   methods: {
