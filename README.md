@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # vue-music
 
 > A Vue.js music project
@@ -23,3 +24,6 @@ For a detailed explanation on how things work, check out the [guide](http://vuej
 =======
 # kyr1e-music
 >>>>>>> 6f38e65aeb78658b934d06305cf1bbc1447af2f1
+=======
+# kyr1e-vue-music
+>>>>>>> orgin/master
