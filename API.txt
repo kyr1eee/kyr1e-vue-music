@@ -1,0 +1,5 @@
+[+]歌曲URL
+1.https://y.qq.com/w/taoge.html?ADTAG=myqq&from=myqq&channel=10007100&id=2646688496
+2.F5,network
+3.https://u.y.qq.com/cgi-bin/musicu.fcg?_=1537286119599
+
