@@ -70,7 +70,6 @@ export default {
   created() {
     this.probeType = 3
     this.listenScroll = true
-    console.log(this.songs)
   },
   methods: {
     getPos(pos) {
@@ -103,7 +102,6 @@ export default {
       } else {
         blur = Math.min(20 * percent, 20)
       }
-      // ios高斯模糊
       this.$refs.filter.style[filter] = `blur(${blur}px)`
       if (newY < this.minScrollY) {
         zIndex = 10

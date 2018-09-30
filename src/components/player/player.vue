@@ -1,6 +1,12 @@
 <template>
     <div class="player" v-show="playList.length > 0">
-      <div class="normal-player" v-show="fullScreen">
+      <transition name="normal"
+                  @enter="enter"
+                  @after-enter="afterEnter"
+                  @leave="leave"
+                  @after-leave="afterLeave"
+      >
+        <div class="normal-player" v-show="fullScreen">
         <div class="background">
           <img width="100%" height="100%" :src="currentSong.image"/>
         </div>
@@ -13,7 +19,7 @@
         </div>
         <div class="middle">
           <div class="middle-l">
-            <div class="cd-wrapper">
+            <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd">
                 <img class="image" :src="currentSong.image">
               </div>
@@ -40,7 +46,9 @@
           </div>
         </div>
       </div>
-      <div class="mini-player" v-show="!fullScreen" @click="open">
+      </transition>
+      <transition name="mini">
+        <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
           <img width="40" height="40" :src="currentSong.image"/>
         </div>
@@ -53,11 +61,15 @@
           <i class="icon-playlist"></i>
         </div>
       </div>
+      </transition>
     </div>
 </template>
 
 <script type="text/ecmascript-6">
 import { mapGetters, mapMutations } from 'vuex'
+import animations from 'create-keyframe-animation'
+import {prefixStyle} from 'common/js/dom'
+const transform = prefixStyle('transform')
 export default {
   computed: {
     ...mapGetters([
@@ -72,6 +84,65 @@ export default {
     },
     open() {
       this.setFullScreen(true)
+    },
+    enter(el, done) {
+      const {x, y, scale} = this._getPosAndScale()
+      let animation = {
+        0: {
+          transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+        },
+        50: {
+          transform: `translate3d(0px, 0px, 0) scale(1.2)`
+        },
+        70: {
+          transform: `translate3d(0, 0, 0) scale(0.98)`
+        },
+        100: {
+          transform: `translate3d(0, 0, 0) scale(1)`
+        }
+      }
+      animations.registerAnimation({
+        name: 'move',
+        animation,
+        presets: {
+          duration: 2000,
+          easing: 'linear'
+        }
+      })
+      animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+    },
+    afterEnter() {
+      animations.unregisterAnimation('move')
+      this.$refs.cdWrapper.style.animation = ''
+    },
+    leave(el, done) {
+      if (this.$refs.cdWrapper.style.animation) {
+        animations.unregisterAnimation('move')
+        this.$refs.cdWrapper.style.animation = ''
+      }
+      const {x, y, scale} = this._getPosAndScale()
+      this.$refs.cdWrapper.style.transition = 'all .6s'
+      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+      this.$refs.cdWrapper.addEventListener('transitionend', done)
+    },
+    afterLeave() {
+      this.$refs.cdWrapper.style.transition = ''
+      this.$refs.cdWrapper.style[transform] = ''
+    },
+    _getPosAndScale() {
+      const targetWidth = 40
+      const paddingLeft = 40
+      const paddingBottom = 30
+      const paddingTop = 80
+      const cdWidth = window.innerWidth * 0.8
+      const scale = targetWidth / cdWidth
+      const x = -(cdWidth / 2 - paddingLeft)
+      const y = window.innerHeight - paddingTop - cdWidth / 2 - paddingBottom
+      return {
+        x,
+        y,
+        scale
+      }
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN'
