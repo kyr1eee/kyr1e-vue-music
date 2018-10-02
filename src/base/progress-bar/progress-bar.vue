@@ -1,8 +1,11 @@
 <template>
-    <div class="progress-bar">
+    <div class="progress-bar" ref="progressBar">
       <div class="bar-inner">
-        <div class="progress"></div>
-        <div class="progress-btn-wrapper">
+        <div class="progress" ref="progress"></div>
+        <div class="progress-btn-wrapper" ref="progressBtn"
+              @touchstart="progressTouchStart"
+              @touchmove="progressTouchMove"
+              @touchend="progressTouchEnd">
           <div class="progress-btn"></div>
         </div>
       </div>
@@ -10,7 +13,56 @@
 </template>
 
 <script type="text/ecmascript-6">
+import { prefixStyle } from 'common/js/dom'
+const transform = prefixStyle('transform')
+const progressBtnWidth = 16
 export default {
+  props: {
+    percent: {
+      type: Number,
+      default: 0
+    }
+  },
+  created() {
+    this.touch = {}
+  },
+  methods: {
+    progressTouchStart(e) {
+      this.touch.init = true
+      this.touch.startX = e.touches[0].pageX
+      this.touch.left = this.$refs.progress.clientWidth
+    },
+    progressTouchMove(e) {
+      if (!this.touch.init) {
+        return
+      }
+      const deltaX = e.touches[0].pageX - this.touch.startX
+      const offset = Math.min(this.$refs.progressBar.clientWidth - progressBtnWidth, Math.max(0, this.touch.left + deltaX))
+      this._offset(offset)
+    },
+    progressTouchEnd() {
+      this.touch.init = false
+      this._triggerPercent()
+    },
+    _offset(offset) {
+      this.$refs.progress.style.width = `${offset}px`
+      this.$refs.progressBtn.style[transform] = `translate3d(${offset}px, 0, 0)`
+    },
+    _triggerPercent() {
+      const barWidth = this.$refs.progressBar.clientWidth - progressBtnWidth
+      const percent = this.$refs.progress.clientWidth / barWidth
+      this.$emit('percentChange', percent)
+    }
+  },
+  watch: {
+    percent(newPercent) {
+      if (newPercent >= 0 && !this.touch.init) {
+        const barWidth = this.$refs.progressBar.clientWidth - progressBtnWidth
+        const offset = newPercent * barWidth
+        this._offset(offset)
+      }
+    }
+  }
 }
 </script>
 
