@@ -30,7 +30,8 @@
           <div class="progress-wrapper">
             <span class="time time-l">{{ format(currentTime) }}</span>
             <div class="progress-bar-wrapper">
-              <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
+              <progress-bar :percent="percent" @percentChange="onProgressBarChange"
+              @percentChanging="onProgressBarChanging" ref="progressBar"></progress-bar>
             </div>
             <span class="time time-r">{{ format(currentSong.duration) }}</span>
           </div>
@@ -56,24 +57,24 @@
       </transition>
       <transition name="mini">
         <div class="mini-player" v-show="!fullScreen" @click="open">
-        <div class="icon">
-          <div class="imgWrapper">
-            <img :class="cdClass" width="40" height="40" :src="currentSong.image"/>
+          <div class="icon">
+            <div class="imgWrapper">
+              <img :class="cdClass" width="40" height="40" :src="currentSong.image"/>
+            </div>
+          </div>
+          <div class="text">
+            <h2 class="name" v-html="currentSong.name"></h2>
+            <p class="desc" v-html="currentSong.singer"></p>
+          </div>
+          <div class="control">
+            <progress-circle :percent="percent">
+              <i :class="miniIcon" class="icon-mini" @click.stop="togglePlaying"></i>
+            </progress-circle>
+          </div>
+          <div class="control">
+            <i class="icon-playlist"></i>
           </div>
         </div>
-        <div class="text">
-          <h2 class="name" v-html="currentSong.name"></h2>
-          <p class="desc" v-html="currentSong.singer"></p>
-        </div>
-        <div class="control">
-          <progress-circle :percent="percent">
-            <i :class="miniIcon" class="icon-mini" @click.stop="togglePlaying"></i>
-          </progress-circle>
-        </div>
-        <div class="control">
-          <i class="icon-playlist"></i>
-        </div>
-      </div>
       </transition>
       <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="timeUpdate"></audio>
     </div>
@@ -215,10 +216,13 @@ export default {
       return `${minute}:${second}`
     },
     onProgressBarChange(percent) {
-      this.$refs.audio.currentTime = this.currentSong.duration * percent
+      this.currentTime = this.$refs.audio.currentTime = this.currentSong.duration * percent
       if (!this.playing) {
         this.togglePlaying()
       }
+    },
+    onProgressBarChanging(percent) {
+      this.currentTime = this.currentSong.duration * percent
     },
     _pad(num, n = 2) {
       let len = num.toString().length
@@ -260,6 +264,14 @@ export default {
       this.$nextTick(() => {
         newPlaying ? audio.play() : audio.pause()
       })
+    },
+    fullScreen(newVal) {
+      // fix progress bar bug
+      if (newVal) {
+        setTimeout(() => {
+          this.$refs.progressBar.setProgressOffset(this.percent)
+        }, 20)
+      }
     }
   },
   components: {
