@@ -4,14 +4,14 @@
       <i class="icon-back"></i>
     </div>
     <h1 class="title" v-html="title"></h1>
-    <div class="bg-image" :style="bgStyle" ref="bgImage">
-      <div class="play-wrapper">
-        <div class="play" v-show="songs.length > 0" ref="playBtn">
+    <div class="bg-image"  ref="bgImage">
+      <div class="play-wrapper" ref="playWrapper">
+        <div class="play" v-show="songs.length > 0" ref="playBtn" @click="random">
           <i class="icon-play"></i>
           <span class="text">随机播放</span>
         </div>
       </div>
-      <div class="filter" ref="filter"></div>
+      <div class="filter" ref="filter" :style="bgStyle"></div>
     </div>
     <div class="bg-layer" ref="layer"></div>
     <scroll @scrollPos="getPos" :data="songs" :probe-type="probeType" :listen-scroll="listenScroll" class="list" ref="list">
@@ -31,7 +31,8 @@ import SongList from 'base/song-list/song-list'
 import { prefixStyle } from 'common/js/dom'
 import Loading from 'base/loading/loading'
 import { mapActions } from 'vuex'
-const RESERVE_HEIGHT = 40
+const RESERVE_HEIGHT = 150
+const BTN_BOTTOM = 20
 const transform = prefixStyle('transform')
 const filter = prefixStyle('filter')
 export default {
@@ -56,7 +57,7 @@ export default {
   },
   computed: {
     bgStyle() {
-      return `background-image:url(${this.bgImage})`
+      return `background-image:url(${this.bgImage});background-size:cover;`
     }
   },
   // 在模板渲染成html后调用
@@ -79,6 +80,11 @@ export default {
     back() {
       this.$router.back()
     },
+    random() {
+      this.randomPlay({
+        list: this.songs
+      })
+    },
     selectItem(item, index) {
       this.selectPlay({
         list: this.songs,
@@ -86,7 +92,8 @@ export default {
       })
     },
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay'
     ])
   },
   watch: {
@@ -94,26 +101,38 @@ export default {
       let translateY = Math.max(this.minScrollY, newY)
       let zIndex = 0
       let scale = 1
+      let filterScale = 1.2
       let blur = 0
+      let bottom = BTN_BOTTOM
       let percent = Math.abs(newY / this.imgHeight)
       this.$refs.layer.style[transform] = `translate3d(0, ${translateY}px, 0)`
       if (newY > 0) {
         scale += percent
         zIndex = 10
+        bottom = BTN_BOTTOM
       } else {
-        blur = Math.min(20 * percent, 20)
+        // ME
+        // set my scroll animate
+        bottom += -translateY
+        filterScale -= percent / 2
+        if (filterScale <= 1) {
+          filterScale = 1
+        }
       }
-      this.$refs.filter.style[filter] = `blur(${blur}px)`
-      if (newY < this.minScrollY) {
+      this.$refs.filter.style[transform] = `scale(${filterScale})`
+      this.$refs.playWrapper.style.bottom = `${bottom}px`
+      if (newY < -(this.imgHeight - RESERVE_HEIGHT)) {
+        blur = Math.min(6 * percent, 6)
         zIndex = 10
         this.$refs.bgImage.style.paddingTop = 0
         this.$refs.bgImage.style.height = `${RESERVE_HEIGHT}px`
-        this.$refs.playBtn.style.display = 'none'
+        this.$refs.playWrapper.style.bottom = `${BTN_BOTTOM}px`
       } else {
+        blur = 0
         this.$refs.bgImage.style.paddingTop = '70%'
         this.$refs.bgImage.style.height = 0
-        this.$refs.playBtn.style.display = ''
       }
+      this.$refs.filter.style[filter] = `blur(${blur}px)`
       this.$refs.bgImage.style.zIndex = zIndex
       this.$refs.bgImage.style[transform] = `scale(${scale})`
     }
@@ -165,7 +184,7 @@ export default {
       height: 0
       padding-top: 70%
       transform-origin: top
-      background-size: cover
+      overflow: hidden
       .play-wrapper
         position: absolute
         bottom: 20px
@@ -197,6 +216,7 @@ export default {
         width: 100%
         height: 100%
         background: rgba(7, 17, 27, 0.4)
+        transform: scale(1.2)
     .bg-layer
       position: relative
       height: 100%

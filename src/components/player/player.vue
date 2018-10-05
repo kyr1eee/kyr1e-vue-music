@@ -36,8 +36,8 @@
             <span class="time time-r">{{ format(currentSong.duration) }}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disable">
               <i @click="prev" class="icon-prev"></i>
@@ -76,7 +76,7 @@
           </div>
         </div>
       </transition>
-      <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="timeUpdate"></audio>
+      <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="timeUpdate" @ended="end"></audio>
     </div>
 </template>
 
@@ -86,6 +86,9 @@ import animations from 'create-keyframe-animation'
 import {prefixStyle} from 'common/js/dom'
 import ProgressBar from 'base/progress-bar/progress-bar'
 import ProgressCircle from 'base/progress-circle/progress-circle'
+import { playMode } from 'common/js/config'
+import { shuffle } from 'common/js/util'
+
 const transform = prefixStyle('transform')
 export default {
   data() {
@@ -97,6 +100,9 @@ export default {
   computed: {
     playIcon() {
       return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    iconMode() {
+      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
     },
     miniIcon() {
       return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
@@ -112,7 +118,9 @@ export default {
       'playList',
       'currentSong',
       'playing',
-      'currentIndex'
+      'currentIndex',
+      'mode',
+      'sequenceList'
     ])
   },
   methods: {
@@ -215,6 +223,17 @@ export default {
       const second = this._pad(time % 60 | 0)
       return `${minute}:${second}`
     },
+    end() {
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
+      }
+    },
+    loop() {
+      this.$refs.audio.currentTime = 0
+      this.$refs.audio.play()
+    },
     onProgressBarChange(percent) {
       this.currentTime = this.$refs.audio.currentTime = this.currentSong.duration * percent
       if (!this.playing) {
@@ -223,6 +242,24 @@ export default {
     },
     onProgressBarChanging(percent) {
       this.currentTime = this.currentSong.duration * percent
+    },
+    changeMode() {
+      const mode = (this.mode + 1) % 3
+      this.setMode(mode)
+      let list = null
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList)
+      } else {
+        list = this.sequenceList
+      }
+      this._resetCurrentIndex(list)
+      this.setPlayList(list)
+    },
+    _resetCurrentIndex(list) {
+      let index = list.findIndex((item) => {
+        return item.id === this.currentSong.id
+      })
+      this.setCurrentIndex(index)
     },
     _pad(num, n = 2) {
       let len = num.toString().length
@@ -250,11 +287,17 @@ export default {
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlaying: 'SET_PLAYING',
-      setCurrentIndex: 'SET_CURRENT_INDEX'
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setMode: 'SET_MODE',
+      setSequenceList: 'SET_SEQUENCE_LIST',
+      setPlayList: 'SET_PLAY_LIST'
     })
   },
   watch: {
-    currentSong() {
+    currentSong(newSong, oldSong) {
+      if (newSong.id === oldSong.id) {
+        return
+      }
       this.$nextTick(() => {
         this.$refs.audio.play()
       })
@@ -267,6 +310,7 @@ export default {
     },
     fullScreen(newVal) {
       // fix progress bar bug
+      // 当mini-player暂停歌曲后切换回normal-player时,progress-bar显示有问题
       if (newVal) {
         setTimeout(() => {
           this.$refs.progressBar.setProgressOffset(this.percent)
