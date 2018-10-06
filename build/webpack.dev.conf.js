@@ -86,7 +86,8 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         }).then((response) => {
           let ret = response.data
           if (typeof ret === 'string') {
-            const reg = /^\w+\(({.+})\)$/
+            // 将jsonp的string转化为json数据
+          const reg = /^\w+\(({.+})\)$/
             const matches = ret.match(reg)
             if (matches) {
               ret = JSON.parse(matches[1])
