@@ -28,6 +28,9 @@
                 <img :class="cdClass" class="image" :src="currentSong.image">
               </div>
             </div>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">{{ playLyric }}</div>
+            </div>
           </div>
           <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
             <div class="lyric-wrapper">
@@ -119,7 +122,8 @@ export default {
       currentTime: 0,
       currentLyric: null,
       currentLineNum: 0,
-      currentShow: 'cd'
+      currentShow: 'cd',
+      playLyric: ''
     }
   },
   created() {
@@ -203,19 +207,29 @@ export default {
       this.$refs.cdWrapper.style[transform] = ''
     },
     togglePlaying() {
+      if (!this.songReady) {
+        return
+      }
       this.setPlaying(!this.playing)
+      if (this.currentLyric) {
+        this.currentLyric.togglePlay()
+      }
     },
     prev() {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex - 1
-      if (index === -1) {
-        index = this.playList.length - 1
-      }
-      this.setCurrentIndex(index)
-      if (!this.playing) {
-        this.togglePlaying()
+      if (this.playList.length === 1) {
+        this.loop()
+      } else {
+        let index = this.currentIndex - 1
+        if (index === -1) {
+          index = this.playList.length - 1
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
       this.songReady = false
     },
@@ -223,18 +237,28 @@ export default {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex + 1
-      if (index === this.playList.length) {
-        index = 0
-      }
-      this.setCurrentIndex(index)
-      if (!this.playing) {
-        this.togglePlaying()
+      // 边界处理
+      if (this.playList.length === 1) {
+        this.loop()
+      } else {
+        let index = this.currentIndex + 1
+        if (index === this.playList.length) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
       this.songReady = false
     },
     ready() {
       this.songReady = true
+      this.canLyricPlay = true
+      // 如果歌曲的播放晚于歌词的出现，播放的时候需要同步歌词
+      if (this.currentLyric) {
+        this.currentLyric.seek(this.currentTime * 1000)
+      }
     },
     error() {
       this.songReady = true
@@ -252,6 +276,7 @@ export default {
       return `${minute}:${second}`
     },
     end() {
+      this.currentTime = 0
       if (this.mode === playMode.loop) {
         this.loop()
       } else {
@@ -261,15 +286,26 @@ export default {
     loop() {
       this.$refs.audio.currentTime = 0
       this.$refs.audio.play()
+      if (this.currentLyric) {
+        this.currentLyric.seek(0)
+      }
     },
     onProgressBarChange(percent) {
-      this.currentTime = this.$refs.audio.currentTime = this.currentSong.duration * percent
+      const currentTime = this.currentSong.duration * percent
+      this.currentTime = this.$refs.audio.currentTime = currentTime
       if (!this.playing) {
         this.togglePlaying()
       }
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000)
+      }
     },
     onProgressBarChanging(percent) {
-      this.currentTime = this.currentSong.duration * percent
+      const currentTime = this.currentSong.duration * percent
+      this.currentTime = currentTime
+      if (this.currentLyric) {
+        this.currentLyric.seek(this.currentTime * 1000)
+      }
     },
     changeMode() {
       const mode = (this.mode + 1) % 3
@@ -286,9 +322,13 @@ export default {
     getLyric() {
       this.currentSong.getLyric().then(lyric => {
         this.currentLyric = new Lyric(lyric, this._handleLyric)
-        if (this.playing) {
-          this.currentLyric.play()
+        if (this.playing && this.canLyricPlay) {
+          this.currentLyric.seek(this.currentTime * 1000)
         }
+      }).catch(() => {
+        this.currentLyric = null
+        this.playLyric = ''
+        this.currentLineNum = 0
       })
     },
     middleTouchStart(e) {
@@ -351,6 +391,7 @@ export default {
       } else {
         this.$refs.lyricList.scrollToElement(0, 0, 1000)
       }
+      this.playLyric = txt
     },
     _resetCurrentIndex(list) {
       let index = list.findIndex((item) => {
@@ -395,10 +436,21 @@ export default {
       if (newSong.id === oldSong.id) {
         return
       }
-      this.$nextTick(() => {
+      this.songReady = false
+      this.canLyricPlay = false
+      if (this.currentLyric) {
+        this.currentLyric.stop()
+        // 重置为null
+        this.currentLyric = null
+        this.currentTime = 0
+        this.playLyric = ''
+        this.currentLineNum = 0
+      }
+      // wechat
+      setTimeout(() => {
         this.$refs.audio.play()
         this.getLyric()
-      })
+      }, 200)
     },
     playing(newPlaying) {
       const audio = this.$refs.audio
@@ -621,6 +673,7 @@ export default {
       width: 100%
       height: 60px
       background: $color-highlight-background
+      opacity: 0.8
       &.mini-enter-active, &.mini-leave-active
         transition: all 0.4s
       &.mini-enter, &.mini-leave-to
