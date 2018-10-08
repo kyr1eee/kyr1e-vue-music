@@ -99,6 +99,9 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         })
       })
 
+      // 寻找歌曲URL
+      // https://y.qq.com/portal/player.html -> network -> musicu.fcg?callback=getplaysongvkey24214148511192346
+      // response -> 'dl.stream.qqmusic.qq.com/' + req_0.data.midurlinfo.purl
       app.post('/api/getPurlUrl', bodyParser.json(), function (req, res) {
         const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
         axios.post(url, req.body, {

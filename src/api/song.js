@@ -2,7 +2,7 @@ import { commonParam, ERR_OK } from './config'
 import { getUid } from 'common/js/uid'
 import axios from 'axios'
 
-const debug = process.env.NODE_ENV !== 'production'
+// const debug = process.env.NODE_ENV !== 'production'
 
 export function getLyric(mid) {
   const url = '/api/lyric'
@@ -25,8 +25,9 @@ export function getLyric(mid) {
 }
 
 export function getSongsUrl(songs) {
-  const url = debug ? '/api/getPurlUrl' : 'http://ustbhuangyi.com/music/api/getPurlUrl'
-
+  // https://y.qq.com/portal/player.html -> network -> musicu.fcg?callback=getplaysongvkey24214148511192346
+  // response -> 'dl.stream.qqmusic.qq.com/' + req_0.data.midurlinfo.purl
+  const url = '/api/getPurlUrl'
   let mids = []
   let types = []
 
@@ -83,6 +84,19 @@ export function getSongsUrl(songs) {
     request()
   })
 }
+// data: {"req":
+//          {
+//            "module":"CDN.SrfCdnDispatchServer",
+//            "method":"GetCdnDispatch",
+//            "param":{"guid":"8442417480","calltype":0,"userip":""}
+//          },
+//        "req_0":
+//          {
+//            "module":"vkey.GetVkeyServer",
+//            "method":"CgiGetVkey",
+//            "param":{"guid":"8442417480","songmid":["003jjoM94WLiTf"],"songtype":[0],"uin":"","loginflag":1,"platform":"20"}},
+//            "comm":{"uin":"","format":"json","ct":20,"cv":0}
+//          }
 
 function genUrlMid(mids, types) {
   const guid = getUid()

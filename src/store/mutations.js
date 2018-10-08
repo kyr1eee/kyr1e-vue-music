@@ -21,6 +21,9 @@ const mutations = {
   },
   [types.SET_CURRENT_INDEX]: function(state, flag) {
     state.currentIndex = flag
+  },
+  [types.SET_DISC]: function(state, disc) {
+    state.disc = disc
   }
 }
 

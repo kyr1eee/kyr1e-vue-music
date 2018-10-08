@@ -61,6 +61,8 @@ export function isValidMusic(musicData) {
   return musicData.songid && musicData.albummid && (!musicData.pay || musicData.pay.payalbumprice === 0)
 }
 
+// https://y.qq.com/portal/player.html -> network -> musicu.fcg?callback=getplaysongvkey24214148511192346
+// response -> 'dl.stream.qqmusic.qq.com/' + req_0.data.midurlinfo.purl
 export function processSongsUrl(songs) {
   if (!songs.length) {
     return Promise.resolve(songs)
