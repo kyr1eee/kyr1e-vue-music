@@ -2,10 +2,10 @@ import { commonParam, ERR_OK } from './config'
 import { getUid } from 'common/js/uid'
 import axios from 'axios'
 
-// const debug = process.env.NODE_ENV !== 'production'
+const debug = process.env.NODE_ENV !== 'production'
 
 export function getLyric(mid) {
-  const url = '/api/lyric'
+  const url = debug ? '/api/lyric' : 'http://www.kyr1e.top/kyr1e-music/api/lyric'
   const data = Object.assign({}, commonParam, {
     songmid: mid,
     platform: 'yqq',
@@ -27,7 +27,7 @@ export function getLyric(mid) {
 export function getSongsUrl(songs) {
   // https://y.qq.com/portal/player.html -> network -> musicu.fcg?callback=getplaysongvkey24214148511192346
   // response -> 'dl.stream.qqmusic.qq.com/' + req_0.data.midurlinfo.purl
-  const url = '/api/getPurlUrl'
+  const url = debug ? '/api/getPurlUrl' : 'http://www.kyr1e.top/kyr1e-music/api/getPurlUrl'
   let mids = []
   let types = []
 
