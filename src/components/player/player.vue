@@ -84,8 +84,10 @@
           </div>
         </div>
         <div class="text">
-          <h2 class="name" v-html="currentSong.name"></h2>
-          <p class="desc" v-html="currentSong.singer"></p>
+          <h2 class="name" v-html="currentSong.name + ' - ' + currentSong.singer"></h2>
+          <div class="playing-lyric-wrapper">
+            <div class="playing-lyric">{{ playLyric }}</div>
+          </div>
         </div>
         <div class="control">
           <progress-circle :percent="percent">
@@ -709,6 +711,10 @@ export default {
           no-wrap()
           font-size: $font-size-small
           color: $color-text-d
+        .playing-lyric
+          color: $color-theme
+          font-size: $font-size-small
+          white-space: nowrap
       .control
         flex: 0 0 30px
         width: 30px
