@@ -33,7 +33,7 @@ export default {
       this.$emit('select', item, index)
     },
     getDesc(song) {
-      return `${song.name}    ${song.album}`
+      return `${song.name}  -  ${song.album}`
     },
     getRankClass(index) {
       if (index < 3) {

@@ -532,6 +532,7 @@ export default {
         bottom: 170px
         white-space: nowrap
         font-size: 0
+        overflow: hidden
         .middle-l
           display: inline-block
           vertical-align: top
