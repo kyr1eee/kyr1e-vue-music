@@ -23,6 +23,11 @@ export default {
     listenScroll: {
       type: Boolean,
       default: false
+    },
+    // 扩展功能: 上拉刷新
+    pullup: {
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -46,6 +51,16 @@ export default {
           me.$emit('scrollPos', pos)
         })
       }
+      if (this.pullup) {
+        this.scroll.on('scrollEnd', () => {
+          if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+            this.$emit('scrollToEnd')
+            console.log('emit...')
+          }
+        })
+      }
+      // show better scroll data
+      console.log(this.scroll)
     },
     enable() {
       this.scroll && this.scroll.enable()

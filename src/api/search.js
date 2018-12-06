@@ -12,7 +12,7 @@ export function getHotkey() {
   return jsonp(url, data, options)
 }
 
-export function searchMusic(query, page, zhida) {
+export function searchMusic(query, page, zhida, perpage) {
   const url = '/api/search'
   // 坑: 因format:'jsonp',返回jsonp字符串callback:"{...}",现改为json返回json数据
   const data = Object.assign({}, commonParam, {
@@ -27,8 +27,7 @@ export function searchMusic(query, page, zhida) {
     ie: 'utf-8',
     sem: 1,
     aggr: 0,
-    perpage: 20,
-    n: 20,
+    n: perpage,
     p: page,
     remoteplace: 'txt.mqq.all',
     uin: 0,
