@@ -1,11 +1,11 @@
-## Vue2.5 移动音乐Web App
+## Vue2.x 移动音乐Web App
 ### 开始
 > npm install
 
 > npm run dev
 ### 技术栈
 
-* MVVM框架：Vue.js （版本2.5）
+* MVVM框架：Vue.js （版本2.x）
 
 * 状态管理：Vuex
 
